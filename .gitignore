@@ -1,0 +1,14 @@
+*.DS_Store
+*.pyc
+*.csv
+*.png
+*.swp
+*.key
+*.pptx
+*.ppt
+*.txt
+build/
+dist/
+*.egg-info/
+
+
