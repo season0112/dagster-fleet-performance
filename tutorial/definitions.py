@@ -1,33 +1,10 @@
-from dagster import (
-    AssetSelection,
-    Definitions,
-    ScheduleDefinition,
-    load_assets_from_modules,
-    EnvVar,
-)
+from dagster import Definitions
+from .assets import iris_dataset, iris_cleaned, iris_harvest_data
+from .resources import snowflake_io_manager
 
-from . import assets
-from .resources import DataGeneratorResource
-
-all_assets = load_assets_from_modules([assets])
-
-datagen = DataGeneratorResource(
-    num_days=EnvVar.int("HACKERNEWS_NUM_DAYS_WINDOW"),
-)
-
-
-# Addition: a ScheduleDefinition targeting all assets and a cron schedule of how frequently to run it
-hackernews_schedule = ScheduleDefinition(
-    name="hackernews_schedule",
-    target=AssetSelection.all(),
-    cron_schedule="0 * * * *",  # every hour
-)
-
+# 定义 Dagster 的 Definitions
 defs = Definitions(
-    assets=all_assets,
-    schedules=[hackernews_schedule],
-    resources={"hackernews_api": datagen},
+    assets=[iris_dataset, iris_harvest_data, iris_cleaned],
+    resources={"io_manager": snowflake_io_manager},
 )
-
-
 

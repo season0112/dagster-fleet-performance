@@ -2,3 +2,4 @@ locations:
   - location_name: tutorial
     code_source:
       module_name: tutorial.definitions
+
