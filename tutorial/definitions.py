@@ -15,7 +15,7 @@ all_assets = load_assets_from_modules([assets])
 
 kpi_config = {
     "ops": {
-        "load_raw_data": {"config": {"kpi": "COPPerformance"}},  # 默认 KPI
+        "load_raw_data": {"config": {"kpi": "COPPerformance"}},  # default kpi
         "apply_filters": {"config": {"kpi": "COPPerformance"}},
         "calculate_kpi": {"config": {"kpi": "COPPerformance"}},
         "save_results": {"config": {"kpi": "COPPerformance"}},
@@ -23,17 +23,18 @@ kpi_config = {
     }
 }
 
-# 定义资产作业
+
 fleetperformance_job = define_asset_job(
     name="fleetperformance_job",
-    selection=AssetSelection.all(),  # 选择所有资产
-    config=kpi_config,  # 传递全局配置
+    selection=AssetSelection.all(),  
+    config=kpi_config,  
 )
 
 fleetperformance_schedule = ScheduleDefinition(
     name="fleetperformance_schedule",
     target=AssetSelection.all(),
     cron_schedule="8 * * * *",  # every hour + 8 mins
+    # cron_schedule="0 12 * * *", # every day at 12:00  
 )
 
 

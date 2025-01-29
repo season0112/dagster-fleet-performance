@@ -281,8 +281,8 @@ def CalculateGasPercentage_withWindow(df_load, MergeWindow_BinEdge):
         thermalEnergy_diff = (df_load['hp1_thermalenergycounter'].loc[i] + df_load['hp2_thermalenergycounter'].loc[i]) - (df_load['hp1_thermalenergycounter'].loc[i-1] + df_load['hp2_thermalenergycounter'].loc[i-1])        
         cvEnergy_diff      = df_load['qc_cvenergycounter'].loc[i] - df_load['qc_cvenergycounter'].loc[i-1]
 
-        print("thermalEnergy_diff:" + str(thermalEnergy_diff))
-        print("cvEnergy_diff:" + str(cvEnergy_diff))
+        # print("thermalEnergy_diff:" + str(thermalEnergy_diff))
+        # print("cvEnergy_diff:" + str(cvEnergy_diff))
 
         if cvEnergy_diff >= 0 and thermalEnergy_diff >= 0:
             GasPercentage_tem = cvEnergy_diff / (cvEnergy_diff + thermalEnergy_diff)            # (* 100) turns to percentage % 
@@ -291,8 +291,8 @@ def CalculateGasPercentage_withWindow(df_load, MergeWindow_BinEdge):
             GasPercentage_tem = np.nan
             HeatPumpPercentage_tem = np.nan
 
-        print("cvEnergy_diff:" + str(cvEnergy_diff))
-        print("HeatPumpPercentage_tem:" + str(HeatPumpPercentage_tem))
+        # print("cvEnergy_diff:" + str(cvEnergy_diff))
+        # print("HeatPumpPercentage_tem:" + str(HeatPumpPercentage_tem))
 
         GasPercentage.append(GasPercentage_tem)
         HeatPumpPercentage.append(HeatPumpPercentage_tem)
