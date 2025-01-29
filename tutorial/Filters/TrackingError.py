@@ -1,9 +1,9 @@
 import KPIUtility
 
 def FilterOnSetPointTempAvialable(df_load):
-    df_load.dropna(subset=['thermostat_otFtRoomSetpoint'], inplace=True)
+    df_load.dropna(subset=['thermostat_otftroomsetpoint'], inplace=True)
 
 def FilterOnRoomTempAvialable(df_load):
-    df_load.dropna(subset=['thermostat_otFtRoomTemperature'], inplace=True)
+    df_load.dropna(subset=['thermostat_otftroomtemperature'], inplace=True)
 
 

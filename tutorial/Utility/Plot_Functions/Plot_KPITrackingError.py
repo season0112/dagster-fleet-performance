@@ -6,8 +6,8 @@ import KPIUtility
 
 def plot_FleetRoomAndSetpointTemperature(df_OneCiC, cic):
     fig, ax = plt.subplots(nrows=1, figsize=(30, 18))
-    plt.plot(df_OneCiC['time_ts'], df_OneCiC['thermostat_otFtRoomTemperature'])
-    plt.plot(df_OneCiC['time_ts'], df_OneCiC['thermostat_otFtRoomSetpoint'])
+    plt.plot(df_OneCiC['time_ts'], df_OneCiC['thermostat_otftroomtemperature'])
+    plt.plot(df_OneCiC['time_ts'], df_OneCiC['thermostat_otftroomsetpoint'])
     plt.ylim(15, 30)
     plt.xticks(fontsize=30)
     plt.savefig('../Plots/TrackingError' + str(cic) + '.png')
@@ -100,8 +100,8 @@ def plot_OneCiCOneDayTemperature(df_OneCiC, idx, index_ReachedSteadyState, index
 
     fig, ax = plt.subplots(nrows=1, figsize=(30, 18))
     plt.title('One CiC in One Day: Parameters Visualization', fontsize=50, fontweight='bold')
-    plt.plot(df_OneCiC['time_ts'], df_OneCiC['thermostat_otFtRoomTemperature'], color='blue', label='Room Temperature')
-    plt.plot(df_OneCiC['time_ts'], df_OneCiC['thermostat_otFtRoomSetpoint']   , color='green', label='SetPoint Temperature')
+    plt.plot(df_OneCiC['time_ts'], df_OneCiC['thermostat_otftroomtemperature'], color='blue', label='Room Temperature')
+    plt.plot(df_OneCiC['time_ts'], df_OneCiC['thermostat_otftroomsetpoint']   , color='green', label='SetPoint Temperature')
     ax.axvline(x=df_OneCiC['time_ts'].iloc[idx], color='red', linestyle='--', linewidth=5, label='Start of Rising Time')
     ax.axvline(x=df_OneCiC['time_ts'].iloc[index_ReachedSteadyState], color='gold', linestyle='--', linewidth=5, label='End of Rising Time & Start of Steady State')
     ax.axvline(x=df_OneCiC['time_ts'].iloc[index_EndOfStableSetPointTemperature], color='magenta', linestyle='--', linewidth=5, label='End of Steady State')

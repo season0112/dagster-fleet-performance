@@ -45,10 +45,10 @@ def calculate_gas_useage_case_time_and_heat(MergeWindow_BinEdge, df_OneCiC):
             df_OneCiC_InOneMergeWindow = df_OneCiC.loc[ startindex : endindex ]      
         else:
             df_OneCiC_InOneMergeWindow = df_OneCiC.loc[ startindex+1 : endindex ]
-        df_OneCiC_InOneMergeWindow = df_OneCiC_InOneMergeWindow.sort_values(by='time_ts').reset_index(drop=True) 
+        df_OneCiC_InOneMergeWindow = df_OneCiC_InOneMergeWindow.sort_values(by='client_time').reset_index(drop=True) 
 
         # DEBUG ONLY, TODO
-        # df_OneCiC_InOneMergeWindow = df_OneCiC_InOneMergeWindow[df_OneCiC_InOneMergeWindow["hp2_watchdogCode"].isna()]
+        # df_OneCiC_InOneMergeWindow = df_OneCiC_InOneMergeWindow[df_OneCiC_InOneMergeWindow["hp2_watchdogcode"].isna()]
 
         # Get CV heat and time in different causes
         absolute_heat_HighDemand , absolute_time_HighDemand      = KPIUtility.calculate_boiler_heat_code0(df_OneCiC_InOneMergeWindow, 'high_demand')
@@ -106,7 +106,7 @@ def calculate_gas_useage_case_time_and_heat(MergeWindow_BinEdge, df_OneCiC):
         print("absolute_time_PreHeating:" + str(absolute_time_PreHeating))
         print("absolute_time_Anomaly:" + str(absolute_time_Anomaly))
         print("absolute_time_NoReason:" + str(absolute_time_NoReason))
-        print(df_OneCiC_InOneMergeWindow['hp1_watchdogCode'].value_counts())
+        print(df_OneCiC_InOneMergeWindow['hp1_watchdogcode'].value_counts())
         print('\n')
         '''
     return boiler_usage_thisCiC_RespectiveBins, boiler_usage_heat_thisCiC_RespectiveBins
@@ -133,8 +133,8 @@ def DetermingSteadyStates(df_OneCiC_InOneMergeWindow, window_size, BinCenterForM
             
             # Get statistics 
             if KPIName == 'InsulationIndicator':
-                OutsideTemperature = df_sub['hp1_temperatureOutside']
-                thermostat         = df_sub['thermostat_otFtRoomTemperature']
+                OutsideTemperature = df_sub['hp1_temperatureoutside']
+                thermostat         = df_sub['thermostat_otftroomtemperature']
                 OutsideTemperature_max, OutsideTemperature_mean, OutsideTemperature_min = OutsideTemperature.max(), OutsideTemperature.mean(), OutsideTemperature.min()
                 thermostat_max, thermostat_mean, thermostat_min                        = thermostat.max(), thermostat.mean(), thermostat.min()
                 # Try to match steady state condition
@@ -142,8 +142,8 @@ def DetermingSteadyStates(df_OneCiC_InOneMergeWindow, window_size, BinCenterForM
                     OutsideTemperature_mean - OutsideTemperature_min < 0.5 and
                     thermostat_max - thermostat_mean < 0.5 and
                     thermostat_mean - thermostat_min < 0.5 and 
-                    df_sub['qc_supervisoryControlMode'].isin([2,3,4]).all() and
-                    df_sub['thermostat_otFtChEnabled'].all()):
+                    df_sub['qc_supervisorycontrolmode'].isin([2,3,4]).all() and
+                    df_sub['thermostat_otftchenabled'].all()):
                     # if a steady state found starting this start index, reverse the flag, and extend the searching range
                     found_valid_sequence = True
                     end_idx += 1
@@ -152,8 +152,8 @@ def DetermingSteadyStates(df_OneCiC_InOneMergeWindow, window_size, BinCenterForM
                     break
 
             elif KPIName == 'Dissipation':
-                WaterTemperature = df_sub['qc_supplyTemperatureFiltered']
-                thermostat = df_sub['thermostat_otFtRoomTemperature']
+                WaterTemperature = df_sub['qc_supplytemperaturefiltered']
+                thermostat = df_sub['thermostat_otftroomtemperature']
                 WaterTemperature_max, WaterTemperature_mean, WaterTemperature_min = WaterTemperature.max(), WaterTemperature.mean(), WaterTemperature.min()
                 thermostat_max, thermostat_mean, thermostat_min = thermostat.max(), thermostat.mean(), thermostat.min()
                 # Try to match steady state condition
@@ -161,8 +161,8 @@ def DetermingSteadyStates(df_OneCiC_InOneMergeWindow, window_size, BinCenterForM
                     WaterTemperature_mean - WaterTemperature_min < 0.5 and
                     thermostat_max - thermostat_mean < 0.5 and
                     thermostat_mean - thermostat_min < 0.5 and
-                    df_sub['qc_supervisoryControlMode'].isin([2,3,4]).all() and 
-                    df_sub['thermostat_otFtChEnabled'].all()):
+                    df_sub['qc_supervisorycontrolmode'].isin([2,3,4]).all() and 
+                    df_sub['thermostat_otftchenabled'].all()):
                     # if a steady state found starting this start index, reverse the flag, and extend the searching range
                     found_valid_sequence = True
                     end_idx += 1
@@ -171,8 +171,8 @@ def DetermingSteadyStates(df_OneCiC_InOneMergeWindow, window_size, BinCenterForM
                     break
 
             elif KPIName == 'TrackingError':
-                SetpointTemperature = df_sub['thermostat_otFtRoomSetpoint']
-                thermostat          = df_sub['thermostat_otFtRoomTemperature']
+                SetpointTemperature = df_sub['thermostat_otftroomsetpoint']
+                thermostat          = df_sub['thermostat_otftroomtemperature']
                 SetpointTemperature_max, SetpointTemperature_mean, SetpointTemperature_min = SetpointTemperature.max(), SetpointTemperature.mean(), SetpointTemperature.min()          
                 thermostat_max, thermostat_mean, thermostat_min = thermostat.max(), thermostat.mean(), thermostat.min()
                 # Try to match steady state condition
@@ -180,8 +180,8 @@ def DetermingSteadyStates(df_OneCiC_InOneMergeWindow, window_size, BinCenterForM
                     SetpointTemperature_mean - SetpointTemperature_min == 0 and
                     thermostat_max - thermostat_mean < 0.2 and
                     thermostat_mean - thermostat_min < 0.2 and
-                    df_sub['qc_supervisoryControlMode'].isin([2,3,4]).all() and
-                    df_sub['thermostat_otFtChEnabled'].all() ):
+                    df_sub['qc_supervisorycontrolmode'].isin([2,3,4]).all() and
+                    df_sub['thermostat_otftchenabled'].all() ):
                     # if a steady state found starting this start index, reverse the flag, and extend the searching range
                     found_valid_sequence = True
                     end_idx += 1
@@ -197,18 +197,18 @@ def DetermingSteadyStates(df_OneCiC_InOneMergeWindow, window_size, BinCenterForM
 
             if KPIName == 'InsulationIndicator': 
                 deliveredHeat = KPIUtility.calculate_total_delivered_heat(df_OneCiC_InOneMergeWindow, start_idx, end_idx-1)
-                mean_RoomTemperature = df_OneCiC_InOneMergeWindow.iloc[start_idx:(end_idx-1)]['thermostat_otFtRoomTemperature'].mean()
-                mean_OutsideTemperature = df_OneCiC_InOneMergeWindow.iloc[start_idx:(end_idx-1)]['hp1_temperatureOutside'].mean()
+                mean_RoomTemperature = df_OneCiC_InOneMergeWindow.iloc[start_idx:(end_idx-1)]['thermostat_otftroomtemperature'].mean()
+                mean_OutsideTemperature = df_OneCiC_InOneMergeWindow.iloc[start_idx:(end_idx-1)]['hp1_temperatureoutside'].mean()
                 KPIIndicator = deliveredHeat / (mean_RoomTemperature - mean_OutsideTemperature)
             elif KPIName == 'Dissipation':
                 deliveredHeat = KPIUtility.calculate_total_delivered_heat(df_OneCiC_InOneMergeWindow, start_idx, end_idx-1)
-                mean_RoomTemperature = df_OneCiC_InOneMergeWindow.iloc[start_idx:(end_idx-1)]['thermostat_otFtRoomTemperature'].mean()
-                mean_WaterTemperature = df_OneCiC_InOneMergeWindow.iloc[start_idx:(end_idx-1)]['qc_supplyTemperatureFiltered'].mean()
+                mean_RoomTemperature = df_OneCiC_InOneMergeWindow.iloc[start_idx:(end_idx-1)]['thermostat_otftroomtemperature'].mean()
+                mean_WaterTemperature = df_OneCiC_InOneMergeWindow.iloc[start_idx:(end_idx-1)]['qc_supplytemperaturefiltered'].mean()
                 KPIIndicator = deliveredHeat / (mean_WaterTemperature - mean_RoomTemperature)
             elif KPIName == 'TrackingError':
                 KPIIndicator = 0
                 data_for_tracking_error = df_OneCiC_InOneMergeWindow.iloc[start_idx:(end_idx-1)]              
-                errors = data_for_tracking_error['thermostat_otFtRoomTemperature'] - data_for_tracking_error['thermostat_otFtRoomSetpoint']
+                errors = data_for_tracking_error['thermostat_otftroomtemperature'] - data_for_tracking_error['thermostat_otftroomsetpoint']
                 rms = np.sqrt(np.mean(errors**2))
                 KPIIndicator = rms
 
@@ -239,14 +239,14 @@ def calculate_rise_time_and_tracking_error(BinCenterForMergeWindow, MergeWindow_
 
     ## quality check flag to indicate if the setpoint temperature is changed, therefore the rising time can be calculated.
     # check every 15-second CiC record if: 
-    # 1). thermostat_otFtRoomSetpoint is changed in next record, and thermostat_otFtRoomSetpoint in next record is at least 1 degree higher than current thermostat_otFtRoomSetpoint. 
-    # 2). thermostat_otFtRoomSetpoint in next record is at least 0.5 degree higher than thermostat_otFtRoomTemperature in this record 
-    # 3). thermostat_otFtRoomSetpoint is not changing further afterwards for One hour
+    # 1). thermostat_otftroomsetpoint is changed in next record, and thermostat_otftroomsetpoint in next record is at least 1 degree higher than current thermostat_otftroomsetpoint. 
+    # 2). thermostat_otftroomsetpoint in next record is at least 0.5 degree higher than thermostat_otftroomtemperature in this record 
+    # 3). thermostat_otftroomsetpoint is not changing further afterwards for One hour
     # Then store the True/False flag in 'SetPointChangedFlag' column
     df_OneCiC.loc[:, 'SetPointChangedFlag'] = (
-        (df_OneCiC['thermostat_otFtRoomSetpoint'].shift(-1) >= df_OneCiC['thermostat_otFtRoomSetpoint'] + 1) &
-        (df_OneCiC['thermostat_otFtRoomSetpoint'].shift(-1) >= df_OneCiC['thermostat_otFtRoomTemperature'] + 0.5) &
-        (df_OneCiC['thermostat_otFtRoomSetpoint'].rolling(239).apply(lambda x: len(set(x)) == 1, raw=True).shift(-240).fillna(0).astype(bool))
+        (df_OneCiC['thermostat_otftroomsetpoint'].shift(-1) >= df_OneCiC['thermostat_otftroomsetpoint'] + 1) &
+        (df_OneCiC['thermostat_otftroomsetpoint'].shift(-1) >= df_OneCiC['thermostat_otftroomtemperature'] + 0.5) &
+        (df_OneCiC['thermostat_otftroomsetpoint'].rolling(239).apply(lambda x: len(set(x)) == 1, raw=True).shift(-240).fillna(0).astype(bool))
     ).fillna(False)
 
 
@@ -261,18 +261,18 @@ def calculate_rise_time_and_tracking_error(BinCenterForMergeWindow, MergeWindow_
                 break
 
         # define rising time and setpoint temperature change
-        # logic to determine rising time: wait until the thermostat_otFtRoomTemperature reaches thermostat_otFtRoomSetpoint - 0.5 degree. 
+        # logic to determine rising time: wait until the thermostat_otftroomtemperature reaches thermostat_otftroomsetpoint - 0.5 degree. 
         index_ReachedSteadyState = idx
         while (
-            abs(df_OneCiC['thermostat_otFtRoomTemperature'].iloc[index_ReachedSteadyState] - df_OneCiC['thermostat_otFtRoomSetpoint'].iloc[idx + 1]) > 0.5
+            abs(df_OneCiC['thermostat_otftroomtemperature'].iloc[index_ReachedSteadyState] - df_OneCiC['thermostat_otftroomsetpoint'].iloc[idx + 1]) > 0.5
             and index_ReachedSteadyState < len(df_OneCiC) - 1  
         ):                    
             index_ReachedSteadyState = index_ReachedSteadyState + 1
 
         if index_ReachedSteadyState < len(df_OneCiC) - 1 and LeftEdgeIndex >= 0:
-            risingtime                = df_OneCiC['time_ts'].iloc[index_ReachedSteadyState] - df_OneCiC['time_ts'].iloc[idx]
-            thermostat_asking_heat_ratio = df_OneCiC['thermostat_otFtChEnabled'].iloc[idx:index_ReachedSteadyState].sum() / len(df_OneCiC.iloc[idx:index_ReachedSteadyState])
-            setpointTemperatureChange = df_OneCiC['thermostat_otFtRoomSetpoint'].iloc[idx+1] - df_OneCiC['thermostat_otFtRoomSetpoint'].iloc[idx] 
+            risingtime                = df_OneCiC['client_time'].iloc[index_ReachedSteadyState] - df_OneCiC['client_time'].iloc[idx]
+            thermostat_asking_heat_ratio = df_OneCiC['thermostat_otftchenabled'].iloc[idx:index_ReachedSteadyState].sum() / len(df_OneCiC.iloc[idx:index_ReachedSteadyState])
+            setpointTemperatureChange = df_OneCiC['thermostat_otftroomsetpoint'].iloc[idx+1] - df_OneCiC['thermostat_otftroomsetpoint'].iloc[idx] 
             #print("Rising time until reach the steady state:" + str(risingtime) )
             #print("thermostat_asking_heat_ratio:" + str(thermostat_asking_heat_ratio))
             #print("SetPoint Temperature changes:" + str(setpointTemperatureChange))
@@ -293,31 +293,31 @@ def calculate_rise_time_and_tracking_error(BinCenterForMergeWindow, MergeWindow_
 
         # Tracking Error
         # Determine the Length of SteadyState for Tracking Error (by checking the set point temperature). Edge case: Last SteadyState will decided by the length of df_OneCiC. 
-        StableSetPointTemperature = df_OneCiC['thermostat_otFtRoomSetpoint'].iloc[index_ReachedSteadyState]
-        index_EndOfStableSetPointTemperature = next( (i for i, SearchingSetPointTemperature in enumerate(df_OneCiC['thermostat_otFtRoomSetpoint'].iloc[index_ReachedSteadyState:], start=index_ReachedSteadyState) if SearchingSetPointTemperature != StableSetPointTemperature), len(df_OneCiC)-1)
-        # print("StableSetPointTemperature last: " + str((df_OneCiC['time_ts'].iloc[index_EndOfStableSetPointTemperature] - df_OneCiC['time_ts'].iloc[index_ReachedSteadyState])) )
+        StableSetPointTemperature = df_OneCiC['thermostat_otftroomsetpoint'].iloc[index_ReachedSteadyState]
+        index_EndOfStableSetPointTemperature = next( (i for i, SearchingSetPointTemperature in enumerate(df_OneCiC['thermostat_otftroomsetpoint'].iloc[index_ReachedSteadyState:], start=index_ReachedSteadyState) if SearchingSetPointTemperature != StableSetPointTemperature), len(df_OneCiC)-1)
+        # print("StableSetPointTemperature last: " + str((df_OneCiC['client_time'].iloc[index_EndOfStableSetPointTemperature] - df_OneCiC['client_time'].iloc[index_ReachedSteadyState])) )
             
         # Check if the pump operation is in SteadyState
         # SteadyState: 1). RoomTemperature is fluctuating around the mean within 1 degrees; 2). This SteadyState last at least 1 hour 
         SteadyState_LastPeriod = index_EndOfStableSetPointTemperature - index_ReachedSteadyState
         # print("SteadyState_LastPeriod:" + str(SteadyState_LastPeriod))
         flag = ( 
-            (df_OneCiC['thermostat_otFtRoomTemperature'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod].max() - df_OneCiC['thermostat_otFtRoomTemperature'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod].mean() < 1) and 
-            (df_OneCiC['thermostat_otFtRoomTemperature'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod].mean() - df_OneCiC['thermostat_otFtRoomTemperature'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod].min() < 1) and
-            len(set(df_OneCiC['thermostat_otFtRoomSetpoint'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod])) == 1 and 
+            (df_OneCiC['thermostat_otftroomtemperature'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod].max() - df_OneCiC['thermostat_otftroomtemperature'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod].mean() < 1) and 
+            (df_OneCiC['thermostat_otftroomtemperature'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod].mean() - df_OneCiC['thermostat_otftroomtemperature'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod].min() < 1) and
+            len(set(df_OneCiC['thermostat_otftroomsetpoint'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod])) == 1 and 
             #SteadyState_LastPeriod > 240
-            df_OneCiC['time_ts'].iloc[index_EndOfStableSetPointTemperature] - df_OneCiC['time_ts'].iloc[index_ReachedSteadyState] > pd.Timedelta(minutes=30)
+            df_OneCiC['client_time'].iloc[index_EndOfStableSetPointTemperature] - df_OneCiC['client_time'].iloc[index_ReachedSteadyState] > pd.Timedelta(minutes=30)
         )
 
         # calculate each tracking error after heating and reaching steady state 
         if (flag):
-            #averagedRoomTemperature  = df_OneCiC['thermostat_otFtRoomTemperature'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod].mean() 
-            #fixedSetPointTemperature = df_OneCiC['thermostat_otFtRoomSetpoint'].iloc[index_ReachedSteadyState]
+            #averagedRoomTemperature  = df_OneCiC['thermostat_otftroomtemperature'].iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod].mean() 
+            #fixedSetPointTemperature = df_OneCiC['thermostat_otftroomsetpoint'].iloc[index_ReachedSteadyState]
             #trackingError = fixedSetPointTemperature - averagedRoomTemperature 
   
             data_for_tracking_error = df_OneCiC.iloc[index_ReachedSteadyState:index_ReachedSteadyState+SteadyState_LastPeriod]
-            data_for_tracking_error = data_for_tracking_error[data_for_tracking_error['thermostat_otFtChEnabled'] == True]
-            errors = data_for_tracking_error['thermostat_otFtRoomTemperature'] - data_for_tracking_error['thermostat_otFtRoomSetpoint']
+            data_for_tracking_error = data_for_tracking_error[data_for_tracking_error['thermostat_otftchenabled'] == True]
+            errors = data_for_tracking_error['thermostat_otftroomtemperature'] - data_for_tracking_error['thermostat_otftroomsetpoint']
             rms = np.sqrt(np.mean(errors**2))
             trackingError = rms
 
@@ -347,14 +347,14 @@ def calculate_rise_time(BinCenterForMergeWindow, MergeWindow_BinEdge, df_OneCiC,
 
     ## quality check flag to indicate if the setpoint temperature is changed, therefore the rising time can be calculated.
     # check every 15-second CiC record if: 
-    # 1). thermostat_otFtRoomSetpoint is changed in next record, and thermostat_otFtRoomSetpoint in next record is at least 1 degree higher than current thermostat_otFtRoomSetpoint. 
-    # 2). thermostat_otFtRoomSetpoint in next record is at least 0.5 degree higher than thermostat_otFtRoomTemperature in this record 
-    # 3). thermostat_otFtRoomSetpoint is not changing further afterwards for One hour
+    # 1). thermostat_otftroomsetpoint is changed in next record, and thermostat_otftroomsetpoint in next record is at least 1 degree higher than current thermostat_otftroomsetpoint. 
+    # 2). thermostat_otftroomsetpoint in next record is at least 0.5 degree higher than thermostat_otftroomtemperature in this record 
+    # 3). thermostat_otftroomsetpoint is not changing further afterwards for One hour
     # Then store the True/False flag in 'SetPointChangedFlag' column
     df_OneCiC.loc[:, 'SetPointChangedFlag'] = (
-        (df_OneCiC['thermostat_otFtRoomSetpoint'].shift(-1) >= df_OneCiC['thermostat_otFtRoomSetpoint'] + 1) &
-        (df_OneCiC['thermostat_otFtRoomSetpoint'].shift(-1) >= df_OneCiC['thermostat_otFtRoomTemperature'] + 0.5) &
-        (df_OneCiC['thermostat_otFtRoomSetpoint'].rolling(239).apply(lambda x: len(set(x)) == 1, raw=True).shift(-240).fillna(0).astype(bool))
+        (df_OneCiC['thermostat_otftroomsetpoint'].shift(-1) >= df_OneCiC['thermostat_otftroomsetpoint'] + 1) &
+        (df_OneCiC['thermostat_otftroomsetpoint'].shift(-1) >= df_OneCiC['thermostat_otftroomtemperature'] + 0.5) &
+        (df_OneCiC['thermostat_otftroomsetpoint'].rolling(239).apply(lambda x: len(set(x)) == 1, raw=True).shift(-240).fillna(0).astype(bool))
     ).fillna(False)
 
     # loop for 15-second CiC record with SetPointChangedFlag==True (从每一个SetPointChangedFlag等于True开始)
@@ -368,18 +368,18 @@ def calculate_rise_time(BinCenterForMergeWindow, MergeWindow_BinEdge, df_OneCiC,
                 break
 
         # define rising time and setpoint temperature change
-        # logic to determine rising time: wait until the thermostat_otFtRoomTemperature reaches thermostat_otFtRoomSetpoint - 0.5 degree. 
+        # logic to determine rising time: wait until the thermostat_otftroomtemperature reaches thermostat_otftroomsetpoint - 0.5 degree. 
         index_ReachedSteadyState = idx
         while (
-            abs(df_OneCiC['thermostat_otFtRoomTemperature'].iloc[index_ReachedSteadyState] - df_OneCiC['thermostat_otFtRoomSetpoint'].iloc[idx + 1]) > 0.5
+            abs(df_OneCiC['thermostat_otftroomtemperature'].iloc[index_ReachedSteadyState] - df_OneCiC['thermostat_otftroomsetpoint'].iloc[idx + 1]) > 0.5
             and index_ReachedSteadyState < len(df_OneCiC) - 1  
         ):                    
             index_ReachedSteadyState = index_ReachedSteadyState + 1
 
         if index_ReachedSteadyState < len(df_OneCiC) - 1 and LeftEdgeIndex >= 0:
-            risingtime                = df_OneCiC['time_ts'].iloc[index_ReachedSteadyState] - df_OneCiC['time_ts'].iloc[idx]
-            thermostat_asking_heat_ratio = df_OneCiC['thermostat_otFtChEnabled'].iloc[idx:index_ReachedSteadyState].sum() / len(df_OneCiC.iloc[idx:index_ReachedSteadyState])
-            setpointTemperatureChange = df_OneCiC['thermostat_otFtRoomSetpoint'].iloc[idx+1] - df_OneCiC['thermostat_otFtRoomSetpoint'].iloc[idx] 
+            risingtime                = df_OneCiC['client_time'].iloc[index_ReachedSteadyState] - df_OneCiC['client_time'].iloc[idx]
+            thermostat_asking_heat_ratio = df_OneCiC['thermostat_otftchenabled'].iloc[idx:index_ReachedSteadyState].sum() / len(df_OneCiC.iloc[idx:index_ReachedSteadyState])
+            setpointTemperatureChange = df_OneCiC['thermostat_otftroomsetpoint'].iloc[idx+1] - df_OneCiC['thermostat_otftroomsetpoint'].iloc[idx] 
             #print("Rising time until reach the steady state:" + str(risingtime) )
             #print("thermostat_asking_heat_ratio:" + str(thermostat_asking_heat_ratio))
             #print("SetPoint Temperature changes:" + str(setpointTemperatureChange))

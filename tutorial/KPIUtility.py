@@ -15,10 +15,10 @@ import Filters
 import os
 
 def FailterOnPumpRunningOnly(df_load):
-    df_load.drop(df_load[~df_load['qc_supervisoryControlMode'].isin([2])].index, inplace=True)
+    df_load.drop(df_load[~df_load['qc_supervisorycontrolmode'].isin([2])].index, inplace=True)
 
 def FailterOnPumpRunning(df_load):
-    df_load.drop(df_load[~df_load['qc_supervisoryControlMode'].isin([2, 3])].index, inplace=True)
+    df_load.drop(df_load[~df_load['qc_supervisorycontrolmode'].isin([2, 3])].index, inplace=True)
 
 def printwelcome():
     print("\n")
@@ -91,7 +91,7 @@ def UnvertToKelvin(inputColumn):
     return inputColumn + 273.15
 
 def SetpointTemperatureChange(df_load, minimumRecords=4):
-    data = df_load['thermostat_otFtRoomSetpoint']
+    data = df_load['thermostat_otftroomsetpoint']
     change_points = data != data.shift(1)
     groups = change_points.cumsum()
     group_sizes = data.groupby(groups).size()
@@ -99,9 +99,9 @@ def SetpointTemperatureChange(df_load, minimumRecords=4):
     return result
 
 def supervisoryControlModeChange(df_load, minimumRecords=4): 
-    df_load['shift'] = df_load['qc_supervisoryControlMode'].shift(1, fill_value=df_load['qc_supervisoryControlMode'].iloc[0]) # TODO: Check iloc or loc?
-    df_load['group'] = (df_load['qc_supervisoryControlMode'] != df_load['shift']).cumsum()
-    consecutive_ones = df_load[df_load['qc_supervisoryControlMode'] == 1].groupby('group').size()
+    df_load['shift'] = df_load['qc_supervisorycontrolmode'].shift(1, fill_value=df_load['qc_supervisorycontrolmode'].iloc[0]) # TODO: Check iloc or loc?
+    df_load['group'] = (df_load['qc_supervisorycontrolmode'] != df_load['shift']).cumsum()
+    consecutive_ones = df_load[df_load['qc_supervisorycontrolmode'] == 1].groupby('group').size()
     result = (consecutive_ones >= minimumRecords).sum()
     return result
 
@@ -115,17 +115,19 @@ def FindNonZeroPeriodNumbers(df_load, propertyName, minimumRecords=4):
 
 
 def GetTemperatureOutside(df_load):
-    
-    if all(np.isnan(df_load['hp2_temperatureOutside'])):
-        hp_temperatureOutside = df_load['hp1_temperatureOutside']
+    df_load['hp1_temperatureoutside'] = pd.to_numeric(df_load['hp1_temperatureoutside'], errors='coerce')
+    df_load['hp2_temperatureoutside'] = pd.to_numeric(df_load['hp2_temperatureoutside'], errors='coerce')
+
+    if df_load['hp2_temperatureoutside'].isna().all():
+        hp_temperatureOutside = df_load['hp1_temperatureoutside']
     else:
-        hp_temperatureOutside = (df_load['hp1_temperatureOutside'] + df_load['hp2_temperatureOutside'])/2
-    return hp_temperatureOutside
+        hp_temperatureOutside = (df_load['hp1_temperatureoutside'] + df_load['hp2_temperatureoutside']) / 2
     
-    #return df_load['hp1_temperatureOutside']
+    return hp_temperatureOutside
+
 
 def CalculateCOP(df_load):
-    COP = ((df_load['hp1_thermalenergycounter'] + df_load['hp2_thermalenergycounter'].fillna(0)).diff() / (df_load['hp1_electricalEnergyCounter'] + df_load['hp2_electricalEnergyCounter'].fillna(0)).diff()).fillna(0)
+    COP = ((df_load['hp1_thermalenergycounter'] + df_load['hp2_thermalenergycounter'].fillna(0)).diff() / (df_load['hp1_electricalenergycounter'] + df_load['hp2_electricalenergycounter'].fillna(0)).diff()).fillna(0)
     return COP
 
 
@@ -266,7 +268,7 @@ def CalculateCOP_withWindow(df_load, MergeWindow_BinEdge):
     COP = []
     for i in MergeWindow_BinEdge[1:]:
         thermalEnergy_diff    = (df_load['hp1_thermalenergycounter'].loc[i]    + df_load['hp2_thermalenergycounter'].loc[i])    - (df_load['hp1_thermalenergycounter'].loc[i-1]    + df_load['hp2_thermalenergycounter'].loc[i-1])
-        electricalEnergy_diff = (df_load['hp1_electricalEnergyCounter'].loc[i] + df_load['hp2_electricalEnergyCounter'].loc[i]) - (df_load['hp1_electricalEnergyCounter'].loc[i-1] + df_load['hp2_electricalEnergyCounter'].loc[i-1]) 
+        electricalEnergy_diff = (df_load['hp1_electricalenergycounter'].loc[i] + df_load['hp2_electricalenergycounter'].loc[i]) - (df_load['hp1_electricalenergycounter'].loc[i-1] + df_load['hp2_electricalenergycounter'].loc[i-1]) 
         if electricalEnergy_diff != 0 and thermalEnergy_diff != 0:
             COP_tem = thermalEnergy_diff/electricalEnergy_diff
         else:
@@ -301,12 +303,12 @@ def CalculateGasPercentage_withWindow(df_load, MergeWindow_BinEdge):
 
 
 def CalculateMAXCOP(df_load):
-    COP_MAX = UnvertToKelvin(df_load['thermostat_otFtRoomTemperature']) / (UnvertToKelvin(df_load['thermostat_otFtRoomTemperature']) - UnvertToKelvin(GetTemperatureOutside(df_load)))
+    COP_MAX = UnvertToKelvin(df_load['thermostat_otftroomtemperature']) / (UnvertToKelvin(df_load['thermostat_otftroomtemperature']) - UnvertToKelvin(GetTemperatureOutside(df_load)))
     return COP_MAX
 
 
 def CalculatePowerDemand(df_load):
-    power = df_load['qc_estimatedPowerDemand'] # kW
+    power = df_load['qc_estimatedpowerdemand'] # kW
     df_load['energy'] = power  * 1000 * 15  # 15 to be changed
     powerDemand = df_load['energy'].cumsum()
     return powerDemand
@@ -317,9 +319,9 @@ def FillSystemFunctionStatus(df_load):
     df_load['functionStatus_HP'] = 0
     df_load['functionStatus_HP_and_boiler'] = 0
 
-    df_load.loc[df_load['qc_supervisoryControlMode'].isin( [2,3] ), 'functionStatus_HP'] = 1
-    df_load.loc[df_load['qc_supervisoryControlMode'].isin( [3,4] ), 'functionStatus_boiler'] = 1
-    df_load.loc[df_load['qc_supervisoryControlMode'].isin( [2,3,4] ), 'functionStatus_HP_and_boiler'] = 1
+    df_load.loc[df_load['qc_supervisorycontrolmode'].isin( [2,3] ), 'functionStatus_HP'] = 1
+    df_load.loc[df_load['qc_supervisorycontrolmode'].isin( [3,4] ), 'functionStatus_boiler'] = 1
+    df_load.loc[df_load['qc_supervisorycontrolmode'].isin( [2,3,4] ), 'functionStatus_HP_and_boiler'] = 1
 
     df_load['functionStatus_boiler'] = df_load['functionStatus_boiler'].astype(int)
     df_load['functionStatus_HP'] = df_load['functionStatus_HP'].astype(int)
@@ -331,18 +333,18 @@ def FillWatchdogAbnormalStatus(df_load):
     df_load['SevereWatchdogAbnormalStatus'] = 0
 
     df_load.loc[
-        (df_load['hp1_watchdogCode'] > 0) |
-        ((df_load['hp2_watchdogCode'] > 0) & df_load['hp2_watchdogCode'].notna()) |
-        (df_load['qc_systemWatchdogCode'] > 0),  
+        (df_load['hp1_watchdogcode'] > 0) |
+        ((df_load['hp2_watchdogcode'] > 0) & df_load['hp2_watchdogcode'].notna()) |
+        (df_load['qc_systemwatchdogcode'] > 0),  
         'WatchdogAbnormalStatus'
     ] = 1
 
     df_load.loc[
-        ((df_load['hp1_watchdogCode'] > 0) & ~df_load['hp1_watchdogCode'].isin([8, 9])) |
-        ((df_load['hp2_watchdogCode'].notna()) & 
-         (df_load['hp2_watchdogCode'] > 0) & 
-         ~df_load['hp2_watchdogCode'].isin([8, 9])) |
-        (df_load['qc_systemWatchdogCode'] > 0),  
+        ((df_load['hp1_watchdogcode'] > 0) & ~df_load['hp1_watchdogcode'].isin([8, 9])) |
+        ((df_load['hp2_watchdogcode'].notna()) & 
+         (df_load['hp2_watchdogcode'] > 0) & 
+         ~df_load['hp2_watchdogcode'].isin([8, 9])) |
+        (df_load['qc_systemwatchdogcode'] > 0),  
         'SevereWatchdogAbnormalStatus'
     ] = 1
 
@@ -351,7 +353,9 @@ def FillWatchdogAbnormalStatus(df_load):
 
 
 def ModelTraining(modelname):
-    data = pd.read_csv("../Utility/Heating_specs_Test_data.csv", sep=';').dropna()
+    print("Now path:")
+    print(os.getcwd()) 
+    data = pd.read_csv("./tutorial/Utility/Heating_specs_Test_data.csv", sep=';').dropna()
     data['Compressor speed（Hz）'] = data['Compressor speed（Hz）'].str.replace('HZ', '').astype(float)
     X = np.array( data[['Outdoor temperature  (℃)', 'Outlet water temp（℃）', 'Compressor speed（Hz）', 'Inlet water temperature（℃）']] )
     y = np.array( data['COP （with water pump）'] )
@@ -406,22 +410,22 @@ def ModelTraining(modelname):
 def ModelPredicting(df_load, model, MergeWindow_BinEdge, cic):
 
     # Preparing Input 
-    if (df_load['hp2_outletTemperatureFiltered'].notnull().all() and
-        df_load['hp2_compressorFrequency'].notnull().all() and
-        df_load['hp2_inletTemperatureFiltered'].notnull().all()):
+    if (df_load['hp2_outlettemperaturefiltered'].notnull().all() and
+        df_load['hp2_compressorfrequency'].notnull().all() and
+        df_load['hp2_inlettemperaturefiltered'].notnull().all()):
         new_data = pd.concat([
             GetTemperatureOutside(df_load),
-            (df_load['hp1_outletTemperatureFiltered'] + df_load['hp2_outletTemperatureFiltered']) / 2,
-            (df_load['hp1_compressorFrequency'] + df_load['hp2_compressorFrequency']) / 2,
-            (df_load['hp1_inletTemperatureFiltered'] + df_load['hp2_inletTemperatureFiltered']) / 2
-        ], axis=1, keys=['outdoor_temperature', 'hp1_outletTemperatureFiltered', 'hp1_compressorFrequency', 'hp1_inletTemperatureFiltered'])
+            (df_load['hp1_outlettemperaturefiltered'] + df_load['hp2_outlettemperaturefiltered']) / 2,
+            (df_load['hp1_compressorfrequency'] + df_load['hp2_compressorfrequency']) / 2,
+            (df_load['hp1_inlettemperaturefiltered'] + df_load['hp2_inlettemperaturefiltered']) / 2
+        ], axis=1, keys=['outdoor_temperature', 'hp1_outlettemperaturefiltered', 'hp1_compressorfrequency', 'hp1_inlettemperaturefiltered'])
     else:
         new_data = pd.concat([
             GetTemperatureOutside(df_load),
-            df_load['hp1_outletTemperatureFiltered'],
-            df_load['hp1_compressorFrequency'],
-            df_load['hp1_inletTemperatureFiltered']
-        ], axis=1, keys=['outdoor_temperature', 'hp1_outletTemperatureFiltered', 'hp1_compressorFrequency', 'hp1_inletTemperatureFiltered'])
+            df_load['hp1_outlettemperaturefiltered'],
+            df_load['hp1_compressorfrequency'],
+            df_load['hp1_inlettemperaturefiltered']
+        ], axis=1, keys=['outdoor_temperature', 'hp1_outlettemperaturefiltered', 'hp1_compressorfrequency', 'hp1_inlettemperaturefiltered'])
 
 
     # Merge for Time Window
@@ -852,38 +856,46 @@ def calculate_boiler_heat_code0(df_OneCiC_InOneMergeWindow, reason):
     time_differences = 0
     heat_differences = []
 
-    for i in range(len(df_OneCiC_InOneMergeWindow) - 1):  
-        hp2_power = df_OneCiC_InOneMergeWindow['hp2_ratedPower'][i]
-        total_rated_power = df_OneCiC_InOneMergeWindow['hp1_ratedPower'][i] + (hp2_power if not np.isnan(hp2_power) else 0)
+
+    for i in range(len(df_OneCiC_InOneMergeWindow) - 1):
+        hp2_power = df_OneCiC_InOneMergeWindow['hp2_ratedpower'][i]
+        
+        if isinstance(hp2_power, (int, float)) and not isinstance(hp2_power, bool):
+            hp2_power = hp2_power if not np.isnan(hp2_power) else 0
+        else:
+            hp2_power = 0  
+        
+        total_rated_power = df_OneCiC_InOneMergeWindow['hp1_ratedpower'][i] + hp2_power
+
 
         condition_high_demand = (
-            df_OneCiC_InOneMergeWindow['hp1_watchdogCode'][i] == 0 and
+            df_OneCiC_InOneMergeWindow['hp1_watchdogcode'][i] == 0 and
 
             ((
-            total_rated_power < df_OneCiC_InOneMergeWindow['qc_estimatedPowerDemand'][i] * 1.1 and
+            total_rated_power < df_OneCiC_InOneMergeWindow['qc_estimatedpowerdemand'][i] * 1.1 and
             total_rated_power > 2000) 
             # or total_rated_power == 0
             ) and
 
-            df_OneCiC_InOneMergeWindow['hp1_limitedByCop'][i] == 0 and  
+            df_OneCiC_InOneMergeWindow['hp1_limitedbycop'][i] == 0 and  
 
-            (pd.isna(df_OneCiC_InOneMergeWindow['hp2_watchdogCode'][i]) or 
-             df_OneCiC_InOneMergeWindow['hp2_watchdogCode'][i] == 0)
+            (pd.isna(df_OneCiC_InOneMergeWindow['hp2_watchdogcode'][i]) or 
+             df_OneCiC_InOneMergeWindow['hp2_watchdogcode'][i] == 0)
         )
 
 
         condition_high_LimitedByCop = (
-            df_OneCiC_InOneMergeWindow['hp1_watchdogCode'][i] == 0 and
-            (pd.isna(df_OneCiC_InOneMergeWindow['hp2_watchdogCode'][i]) or
-             df_OneCiC_InOneMergeWindow['hp2_watchdogCode'][i] == 0) and
+            df_OneCiC_InOneMergeWindow['hp1_watchdogcode'][i] == 0 and
+            (pd.isna(df_OneCiC_InOneMergeWindow['hp2_watchdogcode'][i]) or
+             df_OneCiC_InOneMergeWindow['hp2_watchdogcode'][i] == 0) and
 
-            df_OneCiC_InOneMergeWindow['hp1_limitedByCop'][i] == 1
+            df_OneCiC_InOneMergeWindow['hp1_limitedbycop'][i] == 1
         )
 
         condition_no_reason = (
-            df_OneCiC_InOneMergeWindow['hp1_watchdogCode'][i] == 0 and
-            (pd.isna(df_OneCiC_InOneMergeWindow['hp2_watchdogCode'][i]) or
-             df_OneCiC_InOneMergeWindow['hp2_watchdogCode'][i] == 0) and
+            df_OneCiC_InOneMergeWindow['hp1_watchdogcode'][i] == 0 and
+            (pd.isna(df_OneCiC_InOneMergeWindow['hp2_watchdogcode'][i]) or
+             df_OneCiC_InOneMergeWindow['hp2_watchdogcode'][i] == 0) and
 
             (not condition_high_demand) and 
             (not condition_high_LimitedByCop)
@@ -893,7 +905,7 @@ def calculate_boiler_heat_code0(df_OneCiC_InOneMergeWindow, reason):
 
         if reason == 'high_demand':
             is_valid = condition_high_demand
-            #print("hp1_limitedByCop: " + str( df_OneCiC_InOneMergeWindow['hp1_limitedByCop'][i] ))
+            #print("hp1_limitedbycop: " + str( df_OneCiC_InOneMergeWindow['hp1_limitedbycop'][i] ))
         elif reason == 'limited_by_COP':
             is_valid = condition_high_LimitedByCop
         elif reason == 'no_reason':
@@ -919,39 +931,39 @@ def calculate_boiler_heat_NonCode0(df_OneCiC_InOneMergeWindow, hp_watchdogcodeli
     if exclude == False:
         indices = []
         for idx, row in df_OneCiC_InOneMergeWindow.iterrows():
-            hp1_in_list = row['hp1_watchdogCode'] in hp_watchdogcodelist
-            hp2_is_null = pd.isnull(row['hp2_watchdogCode'])
-            hp2_in_list = row['hp2_watchdogCode'] in hp_watchdogcodelist if not hp2_is_null else False
+            hp1_in_list = row['hp1_watchdogcode'] in hp_watchdogcodelist
+            hp2_is_null = pd.isnull(row['hp2_watchdogcode'])
+            hp2_in_list = row['hp2_watchdogcode'] in hp_watchdogcodelist if not hp2_is_null else False
 
-            # Condition 1: hp2_watchdogCode is null and hp1_watchdogCode in hp_watchdogcodelist
+            # Condition 1: hp2_watchdogcode is null and hp1_watchdogcode in hp_watchdogcodelist
             if hp2_is_null and hp1_in_list:
                 indices.append(idx)
-            # Condition 2: hp2_watchdogCode is not null and both hp1_watchdogCode and hp2_watchdogCode in hp_watchdogcodelist
+            # Condition 2: hp2_watchdogcode is not null and both hp1_watchdogcode and hp2_watchdogcode in hp_watchdogcodelist
             elif not hp2_is_null and hp1_in_list and hp2_in_list:
                 indices.append(idx)
-            # Condition 3: hp2_watchdogCode is not null, one of hp1_watchdogCode or hp2_watchdogCode in hp_watchdogcodelist, and the other is 0
+            # Condition 3: hp2_watchdogcode is not null, one of hp1_watchdogcode or hp2_watchdogcode in hp_watchdogcodelist, and the other is 0
             elif not hp2_is_null and (
-                (hp1_in_list and row['hp2_watchdogCode'] == 0) or (hp2_in_list and row['hp1_watchdogCode'] == 0)
+                (hp1_in_list and row['hp2_watchdogcode'] == 0) or (hp2_in_list and row['hp1_watchdogcode'] == 0)
             ):
                 indices.append(idx)
     
     elif exclude == True:
         indices = []
         for idx, row in df_OneCiC_InOneMergeWindow.iterrows():
-            hp1_in_list = row['hp1_watchdogCode'] in hp_watchdogcodelist
-            hp2_is_null = pd.isnull(row['hp2_watchdogCode'])
-            hp2_in_list = row['hp2_watchdogCode'] in hp_watchdogcodelist if not hp2_is_null else False
+            hp1_in_list = row['hp1_watchdogcode'] in hp_watchdogcodelist
+            hp2_is_null = pd.isnull(row['hp2_watchdogcode'])
+            hp2_in_list = row['hp2_watchdogcode'] in hp_watchdogcodelist if not hp2_is_null else False
 
-            # Condition 1: hp2_watchdogCode is null and hp1_watchdogCode not in hp_watchdogcodelist
+            # Condition 1: hp2_watchdogcode is null and hp1_watchdogcode not in hp_watchdogcodelist
             if hp2_is_null and not hp1_in_list:
                 indices.append(idx)
-            # Condition 2: hp2_watchdogCode is not null and at least one of hp1_watchdogCode or hp2_watchdogCode in hp_watchdogcodelist
+            # Condition 2: hp2_watchdogcode is not null and at least one of hp1_watchdogcode or hp2_watchdogcode in hp_watchdogcodelist
             elif not hp2_is_null and (hp1_in_list or hp2_in_list):
                 indices.append(idx)
-            # Condition 3: hp2_watchdogCode is not null, one of hp1_watchdogCode or hp2_watchdogCode in [8, 9], and the other in [10, 15, 21, 103]
+            # Condition 3: hp2_watchdogcode is not null, one of hp1_watchdogcode or hp2_watchdogcode in [8, 9], and the other in [10, 15, 21, 103]
             elif not hp2_is_null and (
-                (row['hp1_watchdogCode'] in [8, 9] and row['hp2_watchdogCode'] in [10, 15, 21, 103]) or
-                (row['hp2_watchdogCode'] in [8, 9] and row['hp1_watchdogCode'] in [10, 15, 21, 103])
+                (row['hp1_watchdogcode'] in [8, 9] and row['hp2_watchdogcode'] in [10, 15, 21, 103]) or
+                (row['hp2_watchdogcode'] in [8, 9] and row['hp1_watchdogcode'] in [10, 15, 21, 103])
             ):
                 indices.append(idx)
 
@@ -965,19 +977,36 @@ def calculate_boiler_heat_NonCode0(df_OneCiC_InOneMergeWindow, hp_watchdogcodeli
             time_differences = time_differences + 1 
     return sum(heat_differences), time_differences
 
-
+'''
 def calculate_total_delivered_heat(df_load, start_index, end_index):
-
-
     HP1_delivered_heat = df_load['hp1_thermalenergycounter'].iloc[end_index] - df_load['hp1_thermalenergycounter'].iloc[start_index]
 
     if (np.isnan(df_load['hp2_thermalenergycounter'].iloc[end_index]) == False) and (np.isnan(df_load['hp2_thermalenergycounter'].iloc[start_index]) == False):
         HP2_delivered_heat = df_load['hp2_thermalenergycounter'].iloc[end_index] - df_load['hp2_thermalenergycounter'].iloc[start_index]
     else:
         HP2_delivered_heat = 0
-
     Boiler_delivered_heat = df_load['qc_cvenergycounter'].iloc[end_index] - df_load['qc_cvenergycounter'].iloc[start_index]    
+    return HP1_delivered_heat + HP2_delivered_heat + Boiler_delivered_heat
+'''
 
+
+def calculate_total_delivered_heat(df_load, start_index, end_index):
+    df_load['hp1_thermalenergycounter'] = pd.to_numeric(df_load['hp1_thermalenergycounter'], errors='coerce')
+    df_load['hp2_thermalenergycounter'] = pd.to_numeric(df_load['hp2_thermalenergycounter'], errors='coerce')
+    df_load['qc_cvenergycounter'] = pd.to_numeric(df_load['qc_cvenergycounter'], errors='coerce')
+    
+    HP1_delivered_heat = df_load['hp1_thermalenergycounter'].iloc[end_index] - df_load['hp1_thermalenergycounter'].iloc[start_index]
+    
+    hp2_start = df_load['hp2_thermalenergycounter'].iloc[start_index]
+    hp2_end = df_load['hp2_thermalenergycounter'].iloc[end_index]
+    
+    if pd.notna(hp2_start) and pd.notna(hp2_end):
+        HP2_delivered_heat = hp2_end - hp2_start
+    else:
+        HP2_delivered_heat = 0
+    
+    Boiler_delivered_heat = df_load['qc_cvenergycounter'].iloc[end_index] - df_load['qc_cvenergycounter'].iloc[start_index]
+    
     return HP1_delivered_heat + HP2_delivered_heat + Boiler_delivered_heat
 
 

@@ -61,7 +61,7 @@ def plot_GasUseageCase(BinCenterForMergeWindow_WholeTimeRange, KPIlist):
 
 def plot_PiePlotForWatchdogHP1(df_load):
     # For all watchdog Code
-    watchdog_counts = df_load['hp1_watchdogCode'].value_counts()
+    watchdog_counts = df_load['hp1_watchdogcode'].value_counts()
 
     fig, ax = plt.subplots(figsize=(18, 12))  
     ax.pie(watchdog_counts, 
@@ -70,12 +70,12 @@ def plot_PiePlotForWatchdogHP1(df_load):
            startangle=140,
            textprops={'fontsize': 25})  
     ax.axis('equal')  
-    plt.title('hp1_watchdogCode Pie Plot', fontsize=30)  
+    plt.title('hp1_watchdogcode Pie Plot', fontsize=30)  
     plt.savefig('../Plots/'+ 'watchdog.png')
 
     # For watchdog Code except "00"
-    df_load = df_load[df_load['hp1_watchdogCode'] != 0]
-    watchdog_counts_except00 = df_load['hp1_watchdogCode'].value_counts()
+    df_load = df_load[df_load['hp1_watchdogcode'] != 0]
+    watchdog_counts_except00 = df_load['hp1_watchdogcode'].value_counts()
 
     fig, ax = plt.subplots(figsize=(18, 12))  
     ax.pie(watchdog_counts_except00, 
@@ -84,7 +84,7 @@ def plot_PiePlotForWatchdogHP1(df_load):
            startangle=140,
            textprops={'fontsize': 25})  
     ax.axis('equal')  
-    plt.title('hp1_watchdogCode Pie Plot (Except Code "00")', fontsize=30)  
+    plt.title('hp1_watchdogcode Pie Plot (Except Code "00")', fontsize=30)  
     plt.savefig('../Plots/'+ 'watchdog_except00.png')
 
 
@@ -111,8 +111,8 @@ def plot_SetpointTemperatureNumbers_Thresholds(ThresholdTime, df_load, minimumRe
 
 def plot_SetpointTemperature(df_load, SetpointTemperatureChangeNumber):
     fig, ax = plt.subplots(nrows=1, figsize=(30, 18))
-    ax.plot(pd.to_datetime(df_load['time_ts'], utc=True), df_load['thermostat_otFtRoomSetpoint'], 'bs', markersize=10, label='ChangeNumber: ' + str(SetpointTemperatureChangeNumber))
-    ax.set_ylabel("thermostat_otFtRoomSetpoint")
+    ax.plot(pd.to_datetime(df_load['time_ts'], utc=True), df_load['thermostat_otftroomsetpoint'], 'bs', markersize=10, label='ChangeNumber: ' + str(SetpointTemperatureChangeNumber))
+    ax.set_ylabel("thermostat_otftroomsetpoint")
     ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%H-%M'))
     plt.legend(loc='best', fontsize=40)
     plt.savefig('../Plots/'+ 'SetpointTemperature' + '.png')

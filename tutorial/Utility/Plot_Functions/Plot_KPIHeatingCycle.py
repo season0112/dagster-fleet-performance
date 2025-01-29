@@ -64,12 +64,12 @@ def plot_FunctionStatusNumbers_Thresholds(ThresholdTime, df_load, minimumRecords
 
 def plot_SupervisoryControlMode(df_load):
     fig, ax = plt.subplots(nrows=1, figsize=(30, 18))
-    ax.plot(pd.to_datetime(df_load['time_ts'], utc=True), df_load['qc_supervisoryControlMode'], 'bs', markersize=10)
+    ax.plot(pd.to_datetime(df_load['time_ts'], utc=True), df_load['qc_supervisorycontrolmode'], 'bs', markersize=10)
     ax.xaxis.set_major_formatter(plt.matplotlib.dates.DateFormatter('%m-%d'))
     #ax.text(0.05, 0.95, "2 for heatpump, 3 for heatpump and boiler, 4 for boiler", transform=ax.transAxes, fontsize=40, verticalalignment='top', bbox=dict(facecolor='white', alpha=0.5))
-    ax.set_ylabel("qc_supervisoryControlMode")
+    ax.set_ylabel("qc_supervisorycontrolmode")
     #ax.set_ylim(-1, 6)
-    plt.savefig('../Plots/' + 'qc_supervisoryControlMode' + '.png')
+    plt.savefig('../Plots/' + 'qc_supervisorycontrolmode' + '.png')
     plt.close()
 
 
