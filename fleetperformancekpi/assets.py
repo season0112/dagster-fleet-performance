@@ -17,16 +17,63 @@ import Utility.Plot_Functions as Plot_function
 
 logger = get_dagster_logger()
 
-class KpiConfig(Config):
-    kpi: str  
 
-@asset
-def printVariable() -> None:
-    snowflake_user = os.environ.get("SNOWFLAKE_USER")
-    snowflake_password = os.environ.get("SNOWFLAKE_PASSWORD")
-    print(f"SNOWFLAKE_USER: {snowflake_user}")
-    print(f"SNOWFLAKE_PASSWORD: {snowflake_password}")
+@asset(required_resource_keys={"snowflake_client"})
+def create_snowflake_table(context) -> None:
+    """
+    Dagster asset to create a Snowflake table for fleet performance.
+    """
+    create_table_sql = f"""
+    CREATE OR REPLACE TABLE DWH.DEV_SICHEN.FLEETPERFORMANCEKPI_RESULTS (
+        DATE_TIME TIMESTAMP_NTZ,
+        CICID STRING,
+        MeasuredCOP FLOAT,
+        ExpectedCOP FLOAT,
+        COPPerformance FLOAT,
+        OutsideTemperature FLOAT,
+        Heating_cycles_HP INT,
+        Time_by_HP FLOAT,
+        Heating_cycles_boiler INT,
+        Time_by_boiler FLOAT,
+        Heating_cycles_HP_and_boiler INT,
+        Time_by_HP_and_boiler FLOAT,
+        Watchdog_code_changes INT,
+        Time_with_watchdog FLOAT,
+        Severe_watchdog_code_changes INT,
+        Time_with_severe_watchdog FLOAT,
+        Heat_by_boiler FLOAT,
+        Heat_by_HP FLOAT,
+        Tracking_error FLOAT,
+        Rise_time FLOAT,
+        SetPointTemperatureChange FLOAT,
+        House_Insulation_Indicator FLOAT,
+        Heat_distribution_system_capacity FLOAT,
+        SSR_House_insulation FLOAT,
+        SSR_Heat_distribution FLOAT,
+        SSR_Tracking_error FLOAT,
+        BoilerUsage_HighDemand FLOAT,
+        BoilerUsage_Limited_by_COP FLOAT,
+        BoilerUsage_WaterTempTooHigh FLOAT,
+        BoilerUsage_PreHeating FLOAT,
+        BoilerUsage_Anomaly FLOAT,
+        BoilerUsage_NoReason FLOAT,
+        BoilerUsage_TotalBoilerTime FLOAT,
+        BoilerUsage_Heat_HighDemand FLOAT,
+        BoilerUsage_Heat_Limited_by_COP FLOAT,
+        BoilerUsage_Heat_WaterTempTooHigh FLOAT,
+        BoilerUsage_Heat_PreHeating FLOAT,
+        BoilerUsage_Heat_Anomaly FLOAT,
+        BoilerUsage_Heat_NoReason FLOAT,
+        BoilerUsage_TotalBoilerHEAT FLOAT
+    );
+    """
 
+    conn = context.resources.snowflake_client
+    with conn.cursor() as cur:
+        cur.execute(create_table_sql)
+        context.log.info("Successfully created table: KPI_RESULTS in Snowflake.")
+
+    return None
 
 @asset(required_resource_keys={"snowflake_client"})
 def raw_cic_dataset(context) -> pd.DataFrame:
@@ -105,8 +152,8 @@ def apply_filters(context, raw_cic_dataset) -> pd.DataFrame:
     # kpi = "WatchdogChange"
     # kpi = "RiseTime"
     # kpi = "TwoIndicators"
-    # kpi = "GasUseageCase"
-    kpi = "OutsideTemperature"
+    kpi = "GasUseageCase"
+    # kpi = "OutsideTemperature"
 
     logger.info(f"Applying filters for KPI: {kpi}")
     generalfilterList = ['FilterOnTestRigs', 'FilterOnInactiveCiC', 'FilterOnDropZero', 'FilterOnDropABit', 'FilterOnIncreaseCounter', 'FilterOnAllNull']
@@ -153,8 +200,8 @@ def calculate_kpi(context, apply_filters) -> pd.DataFrame:
     # kpi = "WatchdogChange"
     # kpi = "RiseTime"
     # kpi = "TwoIndicators"
-    # kpi = "GasUseageCase"
-    kpi = 'OutsideTemperature'
+    kpi = "GasUseageCase"
+    # kpi = 'OutsideTemperature'
 
     logger.info(f"Calculating KPI: {kpi}")
 
@@ -520,14 +567,49 @@ def calculate_kpi(context, apply_filters) -> pd.DataFrame:
                 new_rows.extend([new_row] if not condition.any() else [])
         if new_rows:
             KPIResult = pd.concat([KPIResult, pd.DataFrame(new_rows)], ignore_index=True)
-
-
         
     return KPIResult
 
 
-@asset
-def KPI_results(calculate_kpi) -> pd.DataFrame:
-    df = pd.DataFrame(calculate_kpi)
-    return df
+@asset(required_resource_keys={"snowflake_client"})
+def Fill_KPI_results(context, calculate_kpi: pd.DataFrame) -> None:
+
+    # Ensure column names are uppercase
+    calculate_kpi.columns = calculate_kpi.columns.str.upper()
+
+    calculate_kpi['DATE_TIME'] = pd.to_datetime(calculate_kpi['DATE_TIME'])
+    calculate_kpi['DATE_TIME'] = calculate_kpi['DATE_TIME'].dt.strftime('%Y-%m-%d %H:%M:%S')
+
+    # Snowflake connection setup
+    conn = context.resources.snowflake_client
+    table_name = "FLEETPERFORMANCEKPI_RESULTS"
+    all_columns = list(calculate_kpi.columns)
+
+    primary_keys = ["DATE_TIME", "CICID"]
+    for key in primary_keys:
+        if key not in all_columns:
+            raise ValueError(f"Primary key {key} missing.") 
+    
+    update_columns = [col for col in all_columns if col not in primary_keys]
+
+    # Constructing MERGE query
+    merge_query = f"""
+        MERGE INTO {table_name} AS target
+        USING (SELECT {', '.join([f'%s AS {col}' for col in all_columns])}) AS source
+        ON { ' AND '.join([f'target.{key} = source.{key}' for key in primary_keys]) }
+        WHEN MATCHED THEN
+            UPDATE SET {', '.join([f'target.{col} = COALESCE(source.{col}, target.{col})' for col in update_columns])}
+        WHEN NOT MATCHED THEN
+            INSERT ({', '.join(all_columns)})
+            VALUES ({', '.join(['source.' + col for col in all_columns])});
+    """
+
+    # Convert DataFrame rows into tuples for batch insert/update
+    values = [tuple(row) for row in calculate_kpi.itertuples(index=False, name=None)]
+
+    cursor = conn.cursor()
+    cursor.executemany(merge_query, values)
+
+    return None
+
 
