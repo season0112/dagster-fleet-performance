@@ -355,7 +355,7 @@ def FillWatchdogAbnormalStatus(df_load):
 def ModelTraining(modelname):
     print("Now path:")
     print(os.getcwd()) 
-    data = pd.read_csv("./tutorial/Utility/Heating_specs_Test_data.csv", sep=';').dropna()
+    data = pd.read_csv("./fleetperformancekpi/Utility/Heating_specs_Test_data.csv", sep=';').dropna()
     data['Compressor speed（Hz）'] = data['Compressor speed（Hz）'].str.replace('HZ', '').astype(float)
     X = np.array( data[['Outdoor temperature  (℃)', 'Outlet water temp（℃）', 'Compressor speed（Hz）', 'Inlet water temperature（℃）']] )
     y = np.array( data['COP （with water pump）'] )

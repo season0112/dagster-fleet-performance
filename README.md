@@ -1,3 +1,5 @@
-# Tutorial Template Project
+# Fleet Performance Project
 
-This is a [Dagster](https://dagster.io/) project made to be used alongside the official [Dagster tutorial](https://docs.dagster.io/tutorial). This project is intentionally empty and is meant to be used as a starting point for the tutorial.
+This is git repo for Fleet Performance Project Production.
+The original repo for research is here: https://github.com/Quattio/Proj_FleetPerformanceKPI
+
