@@ -14,5 +14,6 @@ def FilterOnHPHeatAvialable(df_load):
 def FilterOnBoilerHeatAvialable(df_load):
     df_load.dropna(subset=['qc_cvenergycounter'], inplace=True)
 
-
+def FilterOnSetPointTempAvialable(df_load):
+    df_load.dropna(subset=['thermostat_otftroomsetpoint'], inplace=True)
 

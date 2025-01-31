@@ -52,7 +52,7 @@ def applyfilters(df_load, FilterList, filters, filters_sector_name):
 
     excutefilters(df_load, FilterList, filters)
 
-    print("\033[32mTotal Pass Ratio: \033[35m" + f"{len(df_load) / RawRecordNumber * 100:.2f} %" +  "\033[0m")
+    print(f"\033[32mTotal Pass Ratio: \033[35m {len(df_load)}/{RawRecordNumber} = {len(df_load) / RawRecordNumber * 100:.2f} % \033[0m")
     print("#" * 69)     
     print("\n")
 
